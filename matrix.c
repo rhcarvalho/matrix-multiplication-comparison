@@ -1,9 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define N_MIN 1000
-#define N_MAX 20000
-#define N_STEP (N_MAX-N_MIN)/10
 
 void malloc_matrix(int ***array, int nrows, int ncolumns) {
   *array = malloc(nrows * sizeof(int *));
@@ -134,30 +131,21 @@ double compute(int n, double (*multiply)(int, int **, int **, int **)) {
 }
 
 int main(int argc, char *argv[]) {
-  int n;
-  switch (argc) {
-  case 1:
-    printf("[1] Compute v = Ax looping through rows then columns (i, j)\n");
-    printf("[2] Compute v = Ax looping through columns then rows (j, i)\n");
-    printf("%6s\t%10s\t%10s\n", "N", "[1]", "[2]");
-    for (n = N_MIN; n <= N_MAX; n += N_STEP) {
-      printf("%6d\t%10f\t%10f\n", n, compute(n, &multiply_ij), compute(n, &multiply_ji));
-    } 
-    break;
-
-  case 2:
-    printf("[1] Compute v = Ax looping through rows then columns (i, j)\n");
-    printf("[2] Compute v = Ax looping through columns then rows (j, i)\n");
-    printf("%6s\t%10s\t%10s\n", "N", "[1]", "[2]");
-    n = atoi(argv[1]);
-    printf("%6d\t%10f\t%10f\n", n, compute(n, &multiply_ij), compute(n, &multiply_ji));
-    break;
-
-  default:
-    fprintf(stderr, "Usage: %s N", argv[0]);
+  if (argc != 4) {
+    fprintf(stderr, "Usage: %s MIN MAX COUNT\n", argv[0]);
     exit(1);
-    break;
   }
+
+  int n;
+  int min = atoi(argv[1]), max = atoi(argv[2]);
+  int step = (max - min) / (atoi(argv[3]) - 1);
+
+  printf("[1] Compute v = Ax looping through rows then columns (i, j)\n", step);
+  printf("[2] Compute v = Ax looping through columns then rows (j, i)\n");
+  printf("%6s\t%10s\t%10s\n", "N", "[1]", "[2]");
+  for (n = min; n <= max; n += step) {
+    printf("%6d\t%10f\t%10f\n", n, compute(n, &multiply_ij), compute(n, &multiply_ji));
+  } 
 
   return 0;
 }
