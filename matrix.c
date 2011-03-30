@@ -79,7 +79,7 @@ void pprint_matrix(char *name, int **array, int nrows, int ncolumns) {
   }
 }
 
-void multiply_ij(int n, int **v, int **A, int **x) {
+double multiply_ij(int n, int **v, int **A, int **x) {
   clock_t start = clock();
 
   int i, j;
@@ -89,7 +89,16 @@ void multiply_ij(int n, int **v, int **A, int **x) {
     }
   }
 
-  printf("[multiply_ij] Time elapsed: %f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+  double elapsed_time = ((double)clock() - start) / CLOCKS_PER_SEC;
+  printf("[multiply_ij(n=%d)] Time elapsed: %f\n", n, elapsed_time);
+  return elapsed_time;
+}
+
+void debug_info(int n, int **v, int **A, int **x) {
+  printf("The number was %d\n", n);
+  pprint_matrix("A", A, n, n);
+  pprint_matrix("x", x, n, 1);
+  pprint_matrix("v", v, n, 1);
 }
 
 int main(int argc, char *argv[]) {
@@ -106,10 +115,7 @@ int main(int argc, char *argv[]) {
   init(n, &v, &A, &x);
   multiply_ij(n, v, A, x);
 
-  printf("The number was %d\n", n);
-  pprint_matrix("A", A, n, n);
-  pprint_matrix("x", x, n, 1);
-  pprint_matrix("v", v, n, 1);
+  //debug_info(n, v, A, x);
 
   finalize(n, &v, &A, &x);
 
