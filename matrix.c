@@ -1,7 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-
+#define N_MIN 1000
+#define N_MAX 20000
+#define N_STEP (N_MAX-N_MIN)/10
 
 void malloc_matrix(int ***array, int nrows, int ncolumns) {
   *array = malloc(nrows * sizeof(int *));
@@ -79,6 +81,13 @@ void pprint_matrix(char *name, int **array, int nrows, int ncolumns) {
   }
 }
 
+void debug_info(int n, int **v, int **A, int **x) {
+  printf("The number was %d\n", n);
+  pprint_matrix("A", A, n, n);
+  pprint_matrix("x", x, n, 1);
+  pprint_matrix("v", v, n, 1);
+}
+
 double multiply_ij(int n, int **v, int **A, int **x) {
   clock_t start = clock();
 
@@ -90,34 +99,65 @@ double multiply_ij(int n, int **v, int **A, int **x) {
   }
 
   double elapsed_time = ((double)clock() - start) / CLOCKS_PER_SEC;
-  printf("[multiply_ij(n=%d)] Time elapsed: %f\n", n, elapsed_time);
+  //printf("[multiply_ij(n=%8d)] Time elapsed: %f\n", n, elapsed_time);
   return elapsed_time;
 }
 
-void debug_info(int n, int **v, int **A, int **x) {
-  printf("The number was %d\n", n);
-  pprint_matrix("A", A, n, n);
-  pprint_matrix("x", x, n, 1);
-  pprint_matrix("v", v, n, 1);
-}
+double multiply_ji(int n, int **v, int **A, int **x) {
+  clock_t start = clock();
 
-int main(int argc, char *argv[]) {
-  if (argc != 2) {
-    fprintf(stderr, "Usage: %s N\n", argv[0]);
-    exit(1);
+  int i, j;
+  for (j = 0; j < n; j++) {
+    for (i = 0; i < n; i++) {
+      v[i][0] += A[i][j] * x[j][0];
+    }
   }
 
-  int n = atoi(argv[1]);
+  double elapsed_time = ((double)clock() - start) / CLOCKS_PER_SEC;
+  //printf("[multiply_ji(n=%8d)] Time elapsed: %f\n", n, elapsed_time);
+  return elapsed_time;
+}
+
+double compute(int n, double (*multiply)(int, int **, int **, int **)) {
   int **v;
   int **A;
   int **x;
 
   init(n, &v, &A, &x);
-  multiply_ij(n, v, A, x);
+  double elapsed_time = multiply(n, v, A, x);
 
   //debug_info(n, v, A, x);
 
   finalize(n, &v, &A, &x);
+
+  return elapsed_time;
+}
+
+int main(int argc, char *argv[]) {
+  int n;
+  switch (argc) {
+  case 1:
+    printf("[1] Compute v = Ax looping through rows then columns (i, j)\n");
+    printf("[2] Compute v = Ax looping through columns then rows (j, i)\n");
+    printf("%6s\t%10s\t%10s\n", "N", "[1]", "[2]");
+    for (n = N_MIN; n <= N_MAX; n += N_STEP) {
+      printf("%6d\t%10f\t%10f\n", n, compute(n, &multiply_ij), compute(n, &multiply_ji));
+    } 
+    break;
+
+  case 2:
+    printf("[1] Compute v = Ax looping through rows then columns (i, j)\n");
+    printf("[2] Compute v = Ax looping through columns then rows (j, i)\n");
+    printf("%6s\t%10s\t%10s\n", "N", "[1]", "[2]");
+    n = atoi(argv[1]);
+    printf("%6d\t%10f\t%10f\n", n, compute(n, &multiply_ij), compute(n, &multiply_ji));
+    break;
+
+  default:
+    fprintf(stderr, "Usage: %s N", argv[0]);
+    exit(1);
+    break;
+  }
 
   return 0;
 }
