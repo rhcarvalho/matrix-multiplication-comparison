@@ -1,78 +1,117 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#define N_MAX 30000
-#define min(a, b) (((a) < (b)) ? (a) : (b))
 
-int v[N_MAX][1];
-int A[N_MAX][N_MAX];
-int x[N_MAX][1];
-int N;
 
-int randint(a, b) {
+void malloc_matrix(int ***array, int nrows, int ncolumns) {
+  *array = malloc(nrows * sizeof(int *));
+  if(*array == NULL) {
+    fprintf(stderr, "out of memory\n");
+    exit(1);
+  }
+  int i;
+  for(i = 0; i < nrows; i++) {
+    (*array)[i] = malloc(ncolumns * sizeof(int));
+    if((*array)[i] == NULL) {
+      fprintf(stderr, "out of memory\n");
+      exit(1);
+    }
+  }
+}
+
+void zero_matrix(int ***array, int nrows, int ncolumns) {
+  int i, j;
+  for(i = 0; i < nrows; i++) {
+    for(j = 0; j < ncolumns; j++) {
+      (*array)[i][j] = 0;
+    }
+  }
+}
+
+int randint(int a, int b) {
   return a + (rand() % (b - a + 1));
 }
 
-void init(int n) {
-  srand(time(NULL));
-
-  N = min(n, N_MAX);
+void rand_matrix(int ***array, int nrows, int ncolumns) {
   int i, j;
-  for (i = 0; i < N; i++) {
-    v[i][0] = 0;
-    x[i][0] = randint(-500, 500);
-    for (j = 0; j < N; j++) {
-      A[i][j] = randint(-500, 500);
+  for(i = 0; i < nrows; i++) {
+    for(j = 0; j < ncolumns; j++) {
+      (*array)[i][j] = randint(-500, 500);
     }
   }
 }
 
-void pprint_matrices() {
+void init(int n, int ***v, int ***A, int ***x) {
+  srand(time(NULL));
+
+  malloc_matrix(v, n, 1);
+  malloc_matrix(A, n, n);
+  malloc_matrix(x, n, 1);
+
+  zero_matrix(v, n, 1);
+  rand_matrix(A, n, n);
+  rand_matrix(x, n, 1);
+}
+
+void free_matrix(int ***array, int nrows) {
+  int i;
+  for(i = 0; i < nrows; i++) {
+    free((*array)[i]);
+  }
+  free(*array);
+  *array = NULL;
+}
+
+void finalize(int n, int ***v, int ***A, int ***x) {
+  free_matrix(v, n);
+  free_matrix(A, n);
+  free_matrix(x, n);
+}
+
+void pprint_matrix(char *name, int **array, int nrows, int ncolumns) {
   int i, j;
-  printf("\n[A]\n");
-  for (i = 0; i < N; i++) {
-    for (j = 0; j < N; j++) {
-      printf("%d ", A[i][j]);
+  printf("\n[%s]\n", name);
+  for (i = 0; i < nrows; i++) {
+    for (j = 0; j < ncolumns; j++) {
+      printf("%d ", array[i][j]);
     }
     printf("\n");
   }
-
-  printf("\n[x]\n");
-  for (i = 0; i < N; i++) {
-    printf("%d\n", x[i][0]);
-  }
-
-  printf("\n[v]\n");
-  for (i = 0; i < N; i++) {
-    printf("%d\n", v[i][0]);
-  }
 }
 
-void multiply1() {
+void multiply_ij(int n, int **v, int **A, int **x) {
   clock_t start = clock();
 
   int i, j;
-  for (i = 0; i < N; i++) {
-    for (j = 0; j < N; j++) {
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
       v[i][0] += A[i][j] * x[j][0];
     }
   }
 
-  printf("Time elapsed: %f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
+  printf("[multiply_ij] Time elapsed: %f\n", ((double)clock() - start) / CLOCKS_PER_SEC);
 }
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
-    printf("Usage: %s N\n", argv[0]);
-    return 1;
+    fprintf(stderr, "Usage: %s N\n", argv[0]);
+    exit(1);
   }
 
-  init(atoi(argv[1]));
+  int n = atoi(argv[1]);
+  int **v;
+  int **A;
+  int **x;
 
-  multiply1();
+  init(n, &v, &A, &x);
+  multiply_ij(n, v, A, x);
 
-  printf("The number was %d\n", N);
-  //pprint_matrices();
+  printf("The number was %d\n", n);
+  pprint_matrix("A", A, n, n);
+  pprint_matrix("x", x, n, 1);
+  pprint_matrix("v", v, n, 1);
+
+  finalize(n, &v, &A, &x);
 
   return 0;
 }
