@@ -48,7 +48,7 @@ c     initialize arrays
 c     compute elapsed time
       t1 = compute_ij(n, v, A, x)
       t2 = compute_ji(n, v, A, x)
-      write(*,'(I6,A1,F8.6,A1,F8.6)') n,'	',t1,'	',t2
+      write(*,'(I6,A1,F9.6,A1,F9.6)') n,'	',t1,'	',t2
       
 c     deallocate memory
       deallocate(v)
