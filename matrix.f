@@ -1,111 +1,93 @@
       program matrix
-      integer, dimension(:,:), allocatable :: A, x, y
+      integer, dimension(:,:), allocatable :: v, A, x
 
 c     variables to measure time
       real t1, t2
       
-      integer n, n_min, n_max, step
+      integer n, n_min, n_max, count, step
       integer i, j
       
 c     read parameters from standard input
-      write(*,*) "Write: min max count"
-      read (*,*) n_min, n_max, step
+      character(len=10) :: arg
+      if (iargc() .ne. 3) then
+         write(*,*) "Required arguments: MIN MAX COUNT"
+         call exit(1)
+      end if
 
-      write(*,*) "compute_ij","compute_ji"
+      call getarg(1, arg)
+      read (arg,*) n_min
+      call getarg(2, arg)
+      read (arg,*) n_max
+      call getarg(3, arg)
+      read (arg,*) count
+      step = (n_max - n_min) / (count - 1)
+
+      write(*,*)"[1] Compute v = Ax looping through rows then columns
+     &(i, j)"
+      write(*,*)"[2] Compute v = Ax looping through columns then rows
+     &(j, i)"
+      write(*,'(A6,A10,A10)') "N	","[1]	","[2]"
 
 c     main iteration
       do n = n_min, n_max, step
       
 c     allocate memory for arrays
-      allocate( A(n,n) )
-      allocate( x(n,1) )
-      allocate( y(n,1) )
+      allocate(v(n,1))
+      allocate(A(n,n))
+      allocate(x(n,1))
       
-c     generate values for arrays A and x
+c     initialize arrays
       do i = 1, n
-        do j = 1, n
-          A(i,j) = int(rand()*1000)-500
-        end do
-        x(i,1) = int(rand()*1000)-500
+         v(i,1) = 0
+         do j = 1, n
+            A(i,j) = int(rand()*1000)-500
+         end do
+         x(i,1) = int(rand()*1000)-500
       end do
-      
-c     print matrix A and vector x
-c      write(*,*) "A:"
-c      do i = 1, n
-c        do j = 1, n
-c          write(*,*) A(i,j)
-c        end do
-c        write(*,*) ''
-c      end do
-
-c      write(*,*) "x:"
-c      do i = 1, n
-c        write(*,*) x(i,1)
-c      end do
       
 c     compute elapsed time
-      t1 = compute_ij(n, A, x, y)
-
-      t2 = compute_ji(n, A, x, y)
-      write(*,*) t1, t2
+      t1 = compute_ij(n, v, A, x)
+      t2 = compute_ji(n, v, A, x)
+      write(*,'(I6,A1,F8.6,A1,F8.6)') n,'	',t1,'	',t2
       
 c     deallocate memory
+      deallocate(v)
       deallocate(A)
       deallocate(x)
-      deallocate(y)
-      
       end do
       end
 
-      real function compute_ij(n, A, x, y)
+      real function compute_ij(n, v, A, x)
       integer, dimension(n,n) :: A
-      integer, dimension(n,1) :: x, y
+      integer, dimension(n,1) :: v, x
       real start_time, stop_time
-      
-      do i = 1, n
-        y(i,1) = 0
-      end do
 
-      call cpu_time( start_time )
+      call cpu_time(start_time)
       
       do i = 1, n
         do j = 1, n
-          y(i,1) = y(i,1) + A(i,j) * x(j,1)
+          v(i,1) = v(i,1) + A(i,j) * x(j,1)
         end do
       end do
       
-      call cpu_time( stop_time )
+      call cpu_time(stop_time)
       compute_ij = stop_time-start_time
-      
-c      write(*,*) 'y:'
-c      do i = 1, n
-c        write(*,*) y(i,1)
-c      end do
       end
       
-      real function compute_ji(n, A, x, y)
+      real function compute_ji(n, v, A, x)
       integer, dimension(n,n) :: A
-      integer, dimension(n,1) :: x, y
+      integer, dimension(n,1) :: v, x
       real start_time, stop_time
-      
-      do i = 1, n
-        y(i,1) = 0
-      end do
 
-      call cpu_time( start_time )
+      call cpu_time(start_time)
       
       do j = 1, n
         do i = 1, n
-          y(i,1) = y(i,1) + A(i,j) * x(j,1)
+          v(i,1) = v(i,1) + A(i,j) * x(j,1)
         end do
       end do
       
-      call cpu_time( stop_time )
+      call cpu_time(stop_time)
       compute_ji = stop_time-start_time
-      
-c      write(*,*) 'y:'
-c      do i = 1, n
-c        write(*,*) y(i,1)
-c      end do
       end
       
