@@ -13,3 +13,5 @@ gfortran src/matrix.f -O3 -g -march=native -o bin/matrix_f && bin/matrix_f $ARGS
 echo "Run Python code"
 python src/matrix.py $ARGS > out/py.output
 
+echo "Run Lisp code"
+sbcl --script src/matrix.lisp $ARGS > out/lisp.output
